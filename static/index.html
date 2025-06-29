@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local IDE - Cursor Alternative</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Menu Bar -->
+        <div class="menu-bar">
+            <div class="menu-left">
+                <button id="new-file-btn" class="menu-btn" title="New File">
+                    <i class="fas fa-file"></i>
+                </button>
+                <button id="open-workspace-btn" class="menu-btn" title="Open Workspace">
+                    <i class="fas fa-folder-open"></i>
+                </button>
+                <button id="save-btn" class="menu-btn" title="Save">
+                    <i class="fas fa-save"></i>
+                </button>
+            </div>
+            <div class="menu-center">
+                <h1>Local IDE</h1>
+            </div>
+            <div class="menu-right">
+                <button id="search-btn" class="menu-btn" title="Search">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button id="terminal-btn" class="menu-btn" title="Terminal">
+                    <i class="fas fa-terminal"></i>
+                </button>
+                <button id="git-btn" class="menu-btn" title="Git">
+                    <i class="fas fa-code-branch"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-tabs">
+                    <button class="tab-btn active" data-tab="explorer">
+                        <i class="fas fa-folder"></i>
+                    </button>
+                    <button class="tab-btn" data-tab="search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <button class="tab-btn" data-tab="git">
+                        <i class="fas fa-code-branch"></i>
+                    </button>
+                </div>
+                
+                <!-- File Explorer -->
+                <div class="tab-content active" id="explorer-tab">
+                    <div class="tab-header">
+                        <h3>Explorer</h3>
+                        <button id="refresh-explorer" class="icon-btn">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    </div>
+                    <div id="file-tree" class="file-tree">
+                        <div class="no-workspace">
+                            <p>No workspace opened</p>
+                            <button id="open-folder-btn" class="btn">Open Folder</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Panel -->
+                <div class="tab-content" id="search-tab">
+                    <div class="tab-header">
+                        <h3>Search</h3>
+                    </div>
+                    <div class="search-panel">
+                        <input type="text" id="search-input" placeholder="Search in workspace..." />
+                        <button id="search-execute" class="btn">Search</button>
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                </div>
+
+                <!-- Git Panel -->
+                <div class="tab-content" id="git-tab">
+                    <div class="tab-header">
+                        <h3>Source Control</h3>
+                        <button id="refresh-git" class="icon-btn">
+                            <i class="fas fa-sync"></i>
+                        </button>
+                    </div>
+                    <div id="git-status" class="git-status">
+                        <div class="no-repo">
+                            <p>No git repository found</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editor Area -->
+            <div class="editor-area">
+                <!-- Tab Bar -->
+                <div class="tab-bar" id="tab-bar">
+                    <!-- Tabs will be added dynamically -->
+                </div>
+
+                <!-- Editor Container -->
+                <div class="editor-container">
+                    <div id="welcome-screen" class="welcome-screen">
+                        <div class="welcome-content">
+                            <h2>Welcome to Local IDE</h2>
+                            <p>A Cursor-like IDE that runs locally</p>
+                            <div class="welcome-actions">
+                                <button id="welcome-open-folder" class="btn primary">
+                                    <i class="fas fa-folder-open"></i>
+                                    Open Folder
+                                </button>
+                                <button id="welcome-new-file" class="btn">
+                                    <i class="fas fa-file"></i>
+                                    New File
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Editor -->
+                    <div id="editor" class="code-editor" style="display: none;"></div>
+                </div>
+            </div>
+
+            <!-- Terminal Panel -->
+            <div class="terminal-panel" id="terminal-panel" style="display: none;">
+                <div class="terminal-header">
+                    <h4>Terminal</h4>
+                    <button id="close-terminal" class="icon-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="terminal-content">
+                    <div id="terminal-output" class="terminal-output"></div>
+                    <div class="terminal-input-container">
+                        <span class="terminal-prompt">$ </span>
+                        <input type="text" id="terminal-input" class="terminal-input" placeholder="Enter command..." />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-left">
+                <span id="workspace-name">No workspace</span>
+                <span id="git-branch" style="display: none;"></span>
+            </div>
+            <div class="status-right">
+                <span id="cursor-position">Ln 1, Col 1</span>
+                <span id="file-language">Plain Text</span>
+                <span id="connection-status" class="status-indicator">
+                    <i class="fas fa-circle"></i> Connected
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Panel -->
+    <div id="ai-panel" class="ai-panel" style="display: none;">
+        <div class="ai-header">
+            <h4>AI Assistant</h4>
+            <button id="close-ai" class="icon-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="ai-content">
+            <div id="ai-chat" class="ai-chat"></div>
+            <div class="ai-input-container">
+                <input type="text" id="ai-input" placeholder="Ask AI about your code..." />
+                <button id="ai-send" class="btn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="folder-picker-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Open Workspace</h3>
+            <input type="text" id="workspace-path" placeholder="Enter workspace path..." />
+            <div class="modal-actions">
+                <button id="modal-cancel" class="btn">Cancel</button>
+                <button id="modal-open" class="btn primary">Open</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/javascript-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/python-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
