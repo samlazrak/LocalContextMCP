@@ -1,0 +1,70 @@
+{
+ "mcpServers": {
+   "git": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "git"]
+   },
+   "time": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "time"]
+   },
+   "sqlite": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "sqlite"]
+   },
+   "fetch": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "fetch"]
+   },
+   "sequentialthinking": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "sequentialthinking"]
+   },
+   "puppeteer": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "--init", "-e", "DOCKER_CONTAINER=true", "puppeteer"]
+   },
+   "postgres": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "postgres",
+     "postgresql://host.docker.internal:5432/mydb"
+   ]
+   },
+   "memory": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", "memory"]
+   },
+   "google-maps": {
+     "command": "docker",
+     "args": [
+       "run", "-i", "--rm",
+       "-e",
+       "GOOGLE_MAPS_API_KEY",
+       "google-maps"
+     ],
+     "env": {
+       "GOOGLE_MAPS_API_KEY": "YOUR-KEY-HERE"
+     }
+   },
+   "filesystem": {
+     "command": "docker",
+     "args": ["run", "-i", "--rm", 
+     "--mount", "type=bind,src=/path/to/your/local/folder,dst=/projects/bot-env",
+     "filesystem",
+     "/projects"
+   ]
+   },
+   "brave-search": {
+     "command": "docker",
+     "args": [
+       "run", "-i", "--rm", 
+       "-e",
+       "BRAVE_API_KEY",
+       "brave-search"
+     ],
+     "env": {
+       "BRAVE_API_KEY": "YOUR-KEY-HERE"
+       }
+   }
+ }
+}
