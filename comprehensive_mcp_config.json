@@ -1,0 +1,104 @@
+{
+  "mcpServers": {
+    "comprehensive-mcp": {
+      "command": "python",
+      "args": ["comprehensive_mcp_server.py"],
+      "env": {
+        "DEEPSEEK_API_BASE": "https://api.deepseek.com/v1",
+        "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY}",
+        "GRANITE_API_BASE": "http://localhost:11434/v1",
+        "PGHOST": "localhost",
+        "PGPORT": "5432",
+        "PGDATABASE": "comprehensive_mcp",
+        "PGUSER": "postgres",
+        "PGPASSWORD": "${POSTGRES_PASSWORD}",
+        "MCP_HOST": "0.0.0.0",
+        "MCP_PORT": "8080",
+        "DEBUG": "false"
+      }
+    }
+  },
+  "description": "Comprehensive MCP Meta-Server that aggregates all useful local MCP servers for Void IDE integration",
+  "features": {
+    "ai_models": {
+      "deepseek": {
+        "name": "DeepSeek-Coder-v2-lite-instruct",
+        "type": "remote",
+        "purpose": "Complex code analysis, debugging, and generation"
+      },
+      "granite": {
+        "name": "Granite-3.1-8B",
+        "type": "local",
+        "purpose": "Fast local completions and basic analysis"
+      }
+    },
+    "integrated_servers": [
+      "filesystem",
+      "git",
+      "github", 
+      "postgres",
+      "sqlite",
+      "mysql",
+      "web-search",
+      "fetch",
+      "puppeteer",
+      "docker",
+      "kubernetes",
+      "eslint",
+      "black",
+      "prettier",
+      "pytest",
+      "jest",
+      "memory",
+      "sequential-thinking",
+      "time",
+      "slack",
+      "discord",
+      "aws",
+      "azure",
+      "huggingface",
+      "openai",
+      "notion",
+      "google-drive",
+      "sentry"
+    ],
+    "core_capabilities": [
+      "comprehensive_code_completion",
+      "project_analysis",
+      "ai_assisted_debugging",
+      "code_generation",
+      "intelligent_search",
+      "multi_language_support",
+      "context_aware_suggestions",
+      "automated_testing",
+      "documentation_generation",
+      "refactoring_suggestions"
+    ]
+  },
+  "void_integration": {
+    "protocol": "JSON-RPC",
+    "transport": "HTTP",
+    "endpoint": "http://localhost:8080",
+    "health_check": "http://localhost:8080/health",
+    "api_endpoints": {
+      "servers": "/api/servers",
+      "tools": "/tools_list",
+      "completion": "/comprehensive_code_completion",
+      "analysis": "/project_analysis",
+      "debug": "/ai_assisted_debugging",
+      "generate": "/code_generation"
+    }
+  },
+  "setup_requirements": {
+    "python_version": ">=3.8",
+    "postgresql": ">=12",
+    "node_js": ">=18",
+    "docker": "optional",
+    "api_keys": [
+      "DEEPSEEK_API_KEY (for external AI processing)",
+      "GITHUB_TOKEN (for GitHub integration)",
+      "OPENAI_API_KEY (optional)",
+      "HUGGINGFACE_TOKEN (optional)"
+    ]
+  }
+}
