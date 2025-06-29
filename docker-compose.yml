@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=mcp_memory
+      - PGUSER=postgres
+      - PGPASSWORD=postgres
+      - LMSTUDIO_API_BASE=http://host.docker.internal:1234/v1
+      - LMSTUDIO_EMBEDDING_MODEL=qwen2.5-coder-0.5B-instruct
+    depends_on:
+      - db
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=mcp_memory
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - mcp-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  mcp-network:
+    driver: bridge 

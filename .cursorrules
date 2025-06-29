@@ -1,0 +1,73 @@
+# MCP Server Project Rules
+
+## Code Style
+- Use Python 3.11+ features
+- Follow PEP 8 style guidelines
+- Use type hints where appropriate
+- Write docstrings for all functions and classes
+- Use meaningful variable and function names
+
+## Database
+- Always use parameterized queries to prevent SQL injection
+- Use connection pooling for PostgreSQL
+- Handle database errors gracefully
+- Use transactions where appropriate
+- Add indexes for frequently queried columns
+
+## API Design
+- Use RESTful principles
+- Return appropriate HTTP status codes
+- Include error messages in JSON responses
+- Validate all input data
+- Use OpenAPI/Swagger documentation
+
+## Error Handling
+- Catch specific exceptions when possible
+- Log errors with appropriate levels
+- Return user-friendly error messages
+- Don't expose internal system details in production
+
+## Security
+- Never hardcode secrets or API keys
+- Use environment variables for configuration
+- Validate and sanitize all inputs
+- Use HTTPS in production
+- Implement authentication if needed
+
+## Testing
+- Write unit tests for all functions
+- Write integration tests for API endpoints
+- Use pytest for testing framework
+- Aim for good test coverage
+- Mock external dependencies
+
+## Logging
+- Use structured logging
+- Include relevant context in log messages
+- Use appropriate log levels (DEBUG, INFO, WARNING, ERROR)
+- Don't log sensitive information
+
+## Performance
+- Use connection pooling for database connections
+- Implement caching where appropriate
+- Optimize database queries
+- Use async/await for I/O operations when possible
+
+## Docker
+- Use multi-stage builds when appropriate
+- Keep images small and secure
+- Use non-root users in containers
+- Include health checks
+- Use .dockerignore to exclude unnecessary files
+
+## Project Structure
+- Keep modules focused and single-purpose
+- Use relative imports within the project
+- Organize tests in a separate directory
+- Use configuration files for environment-specific settings
+
+## Dependencies
+- Pin dependency versions in requirements.txt
+- Use virtual environments
+- Keep dependencies minimal and up-to-date
+- Document why each dependency is needed 

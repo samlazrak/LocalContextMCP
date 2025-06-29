@@ -1,0 +1,114 @@
+{
+  "memory": {
+    "provider": "postgresql",
+    "postgresql": {
+      "host": "localhost",
+      "port": 5432,
+      "database": "mcp_memory",
+      "user": "postgres",
+      "password": "postgres",
+      "connection_pool": {
+        "min_connections": 1,
+        "max_connections": 10
+      }
+    },
+    "context": {
+      "max_context_tokens": 32000,
+      "chunk_size": 2048,
+      "overlap": 256,
+      "retrieval_strategy": "semantic_hybrid",
+      "max_retrieved_chunks": 10
+    }
+  },
+  "embedding": {
+    "provider": "lmstudio",
+    "lmstudio": {
+      "api_base": "http://localhost:1234/v1",
+      "model": "qwen2.5-coder-0.5B-instruct",
+      "timeout": 30
+    }
+  },
+  "llm": {
+    "draft": {
+      "provider": "lmstudio",
+      "api_base": "http://localhost:1234/v1",
+      "model": "qwen2.5-coder-0.5B-instruct",
+      "temperature": 0.7,
+      "max_tokens": 2048
+    },
+    "primary": {
+      "provider": "lmstudio",
+      "api_base": "http://100.101.230.30:5674/v1",
+      "model": "qwen2.5-coder-14B-instruct",
+      "temperature": 0.7,
+      "max_tokens": 4096
+    }
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8080,
+    "log_level": "info",
+    "cors": {
+      "allowed_origins": ["*"],
+      "allowed_methods": ["GET", "POST", "PUT", "DELETE"],
+      "allowed_headers": ["Content-Type", "Authorization"]
+    }
+  },
+  "api": {
+    "base_url": "http://localhost:5000",
+    "endpoints": {
+      "health": "/health",
+      "message": "/message",
+      "context_chunk": "/context_chunk",
+      "recent_chunks": "/recent_chunks",
+      "semantic_search": "/semantic_search"
+    }
+  },
+  "chunking": {
+    "strategy": "sliding_window",
+    "chunk_size": 2048,
+    "overlap": 256,
+    "preserve_sentences": true,
+    "metadata": {
+      "include_offsets": true,
+      "include_message_id": true,
+      "include_timestamp": true
+    }
+  },
+  "semantic_search": {
+    "similarity_metric": "cosine",
+    "top_k": 3,
+    "threshold": 0.7,
+    "hybrid_weight": 0.5
+  },
+  "security": {
+    "api_keys": [],
+    "rate_limit": {
+      "requests_per_minute": 100,
+      "requests_per_hour": 1000
+    },
+    "input_validation": true,
+    "sql_injection_protection": true
+  },
+  "monitoring": {
+    "logging": {
+      "level": "info",
+      "format": "json",
+      "file": "logs/mcp_server.log"
+    },
+    "metrics": {
+      "enabled": true,
+      "endpoint": "/metrics"
+    },
+    "health_check": {
+      "enabled": true,
+      "interval": 30
+    }
+  },
+  "backup": {
+    "enabled": true,
+    "schedule": "0 2 * * *",
+    "retention_days": 30,
+    "compression": true
+  }
+} 

@@ -1,0 +1,61 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug API Server",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/api_server.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PGHOST": "localhost",
+        "PGPORT": "5432",
+        "PGDATABASE": "mcp_memory",
+        "PGUSER": "postgres",
+        "PGPASSWORD": "postgres",
+        "LMSTUDIO_API_BASE": "http://localhost:1234/v1",
+        "LMSTUDIO_EMBEDDING_MODEL": "qwen2.5-coder-0.5B-instruct"
+      },
+      "args": [],
+      "justMyCode": true
+    },
+    {
+      "name": "Debug Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/", "-v", "-s"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PGHOST": "localhost",
+        "PGPORT": "5432",
+        "PGDATABASE": "mcp_memory",
+        "PGUSER": "postgres",
+        "PGPASSWORD": "postgres"
+      },
+      "justMyCode": false
+    },
+    {
+      "name": "Debug Database Setup",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/db.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PGHOST": "localhost",
+        "PGPORT": "5432",
+        "PGDATABASE": "mcp_memory",
+        "PGUSER": "postgres",
+        "PGPASSWORD": "postgres"
+      },
+      "args": [],
+      "justMyCode": true
+    }
+  ]
+} 
