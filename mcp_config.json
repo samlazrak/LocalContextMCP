@@ -1,114 +1,125 @@
 {
-  "memory": {
-    "provider": "postgresql",
-    "postgresql": {
-      "host": "localhost",
-      "port": 5432,
-      "database": "mcp_memory",
-      "user": "postgres",
-      "password": "postgres",
-      "connection_pool": {
-        "min_connections": 1,
-        "max_connections": 10
+  "mcpServers": {
+    "filesystem": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "--mount", "type=bind,src=/Users/m3/AI/LocalContextMCP,dst=/projects/bot-env",
+        "filesystem",
+        "/projects"
+      ]
+    },
+    "git": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "git"]
+    },
+    "time": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "time"]
+    },
+    "sqlite": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "sqlite"]
+    },
+    "fetch": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "fetch"]
+    },
+    "sequentialthinking": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "sequentialthinking"]
+    },
+    "postgres": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm", "postgres",
+        "postgresql://host.docker.internal:5432/mcp_memory"
+      ]
+    },
+    "memory": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "memory"]
+    },
+    "web-search": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "web-search"]
+    },
+    "localContextMCP": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "PGHOST=host.docker.internal",
+        "-e", "PGPORT=5432",
+        "-e", "PGDATABASE=mcp_memory",
+        "-e", "PGUSER=postgres",
+        "-e", "PGPASSWORD=postgres",
+        "-e", "LMSTUDIO_API_BASE=http://host.docker.internal:1234/v1",
+        "-e", "LMSTUDIO_EMBEDDING_MODEL=qwen2.5-coder-0.5B-instruct",
+        "localcontextmcp"
+      ]
+    },
+    "desktop-commander": {
+      "command": "npx",
+      "args": [
+        "-y", "@smithery/cli@latest", "run", "@wonderwhy-er/desktop-commander",
+        "--key", "57d49901-03f1-4efd-8cb9-3db9573e51b4"
+      ]
+    },
+    "duckduckgo-mcp-server": {
+      "command": "npx",
+      "args": [
+        "-y", "@smithery/cli@latest", "run", "@nickclyde/duckduckgo-mcp-server",
+        "--key", "57d49901-03f1-4efd-8cb9-3db9573e51b4"
+      ]
+    },
+    "servers": {
+      "command": "npx",
+      "args": [
+        "-y", "@smithery/cli@latest", "run", "@jlia0/servers",
+        "--key", "57d49901-03f1-4efd-8cb9-3db9573e51b4"
+      ]
+    }
+  },
+  "description": "Structured output template for MCP server with PostgreSQL, LM Studio, and tool/memory integration.",
+  "format": {
+    "entities": [
+      {
+        "id": "entity_1",
+        "name": "Example Entity",
+        "type": "Person | Organization | Tool | File | Database | ...",
+        "attributes": {
+          "role": "user | assistant | system",
+          "tool": "git | sqlite | postgres | ...",
+          "file_path": "/projects/bot-env/...",
+          "db_table": "messages | context_chunks | ...",
+          "other": "Any other relevant attribute"
+        }
       }
-    },
-    "context": {
-      "max_context_tokens": 32000,
-      "chunk_size": 2048,
-      "overlap": 256,
-      "retrieval_strategy": "semantic_hybrid",
-      "max_retrieved_chunks": 10
-    }
+    ],
+    "facts": [
+      {
+        "subject": "entity_1",
+        "relation": "used_tool | stored_in | embedded_with | chunked_into | ...",
+        "object": "entity_2",
+        "evidence": "User called the 'git' tool to check status."
+      }
+    ],
+    "events": [
+      {
+        "id": "event_1",
+        "type": "ToolCall | MessageStored | EmbeddingGenerated | ...",
+        "participants": ["entity_1", "entity_2"],
+        "date": "2025-06-29T15:30:00Z",
+        "description": "User stored a message and generated an embedding."
+      }
+    ],
+    "memory": [
+      {
+        "key": "session_id:session456",
+        "value": "User message and context chunk stored."
+      }
+    ],
+    "context": "This information was extracted from the user's interaction with the MCP server, including tool calls, file/database operations, and memory updates."
   },
-  "embedding": {
-    "provider": "lmstudio",
-    "lmstudio": {
-      "api_base": "http://localhost:1234/v1",
-      "model": "qwen2.5-coder-0.5B-instruct",
-      "timeout": 30
-    }
-  },
-  "llm": {
-    "draft": {
-      "provider": "lmstudio",
-      "api_base": "http://localhost:1234/v1",
-      "model": "qwen2.5-coder-0.5B-instruct",
-      "temperature": 0.7,
-      "max_tokens": 2048
-    },
-    "primary": {
-      "provider": "lmstudio",
-      "api_base": "http://100.101.230.30:5674/v1",
-      "model": "qwen2.5-coder-14B-instruct",
-      "temperature": 0.7,
-      "max_tokens": 4096
-    }
-  },
-  "server": {
-    "host": "127.0.0.1",
-    "port": 8080,
-    "log_level": "info",
-    "cors": {
-      "allowed_origins": ["*"],
-      "allowed_methods": ["GET", "POST", "PUT", "DELETE"],
-      "allowed_headers": ["Content-Type", "Authorization"]
-    }
-  },
-  "api": {
-    "base_url": "http://localhost:5000",
-    "endpoints": {
-      "health": "/health",
-      "message": "/message",
-      "context_chunk": "/context_chunk",
-      "recent_chunks": "/recent_chunks",
-      "semantic_search": "/semantic_search"
-    }
-  },
-  "chunking": {
-    "strategy": "sliding_window",
-    "chunk_size": 2048,
-    "overlap": 256,
-    "preserve_sentences": true,
-    "metadata": {
-      "include_offsets": true,
-      "include_message_id": true,
-      "include_timestamp": true
-    }
-  },
-  "semantic_search": {
-    "similarity_metric": "cosine",
-    "top_k": 3,
-    "threshold": 0.7,
-    "hybrid_weight": 0.5
-  },
-  "security": {
-    "api_keys": [],
-    "rate_limit": {
-      "requests_per_minute": 100,
-      "requests_per_hour": 1000
-    },
-    "input_validation": true,
-    "sql_injection_protection": true
-  },
-  "monitoring": {
-    "logging": {
-      "level": "info",
-      "format": "json",
-      "file": "logs/mcp_server.log"
-    },
-    "metrics": {
-      "enabled": true,
-      "endpoint": "/metrics"
-    },
-    "health_check": {
-      "enabled": true,
-      "interval": 30
-    }
-  },
-  "backup": {
-    "enabled": true,
-    "schedule": "0 2 * * *",
-    "retention_days": 30,
-    "compression": true
-  }
-} 
+  "instructions": "Return only valid JSON. Use unique IDs for entities and events. Only include fields present in the input. Use types and relations relevant to the MCP server's actual tools and memory."
+}
