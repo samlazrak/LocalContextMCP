@@ -137,8 +137,10 @@ else
     print_warning "PostgreSQL not found - database features will be limited"
 fi
 
-# Setup Granite 3.1 8B locally (via Ollama)
-print_header "Setting up Granite 3.1 8B (local LLM)..."
+# Setup Local LLMs
+print_header "Setting up local LLMs..."
+
+# Setup Ollama for Granite 3.1 8B
 if command -v ollama &> /dev/null; then
     print_status "Ollama found, installing Granite 3.1 8B..."
     ollama pull granite3.1:8b
@@ -151,6 +153,19 @@ else
     ollama pull granite3.1:8b
     print_status "Granite 3.1 8B installed ✓"
 fi
+
+# Instructions for DeepSeek local setup
+print_header "DeepSeek Local Setup Instructions"
+print_status "To run DeepSeek locally, you need to:"
+echo "  1. Download a local DeepSeek model (e.g., via Ollama, vLLM, or similar)"
+echo "  2. Start the model server on port 8000 with OpenAI-compatible API"
+echo "  3. Example with Ollama:"
+echo "     ollama pull deepseek-coder"
+echo "     ollama serve --port 8000"
+echo "  4. Or use vLLM, Text Generation WebUI, or other OpenAI-compatible servers"
+echo ""
+print_warning "The server will work without DeepSeek but complex tasks will be limited"
+print_warning "Update DEEPSEEK_API_BASE in .env to point to your local server"
 
 # Install essential MCP servers
 print_header "Installing essential MCP servers..."
@@ -190,9 +205,9 @@ PGDATABASE=comprehensive_mcp
 PGUSER=postgres
 PGPASSWORD=your_postgres_password
 
-# LLM Configuration
-DEEPSEEK_API_BASE=https://api.deepseek.com/v1
-DEEPSEEK_API_KEY=your_deepseek_api_key
+# LLM Configuration (Local)
+DEEPSEEK_API_BASE=http://localhost:8000/v1
+DEEPSEEK_MODEL=deepseek-coder
 GRANITE_API_BASE=http://localhost:11434/v1
 
 # Server Configuration
@@ -365,8 +380,8 @@ echo "4. Configure Void IDE with void_mcp_config.json"
 echo ""
 print_status "The comprehensive MCP server provides:"
 echo "   - 30+ integrated MCP servers"
-echo "   - DeepSeek-Coder-v2-lite-instruct (remote)"
-echo "   - Granite 3.1 8B (local)"
+echo "   - DeepSeek-Coder (local on port 8000)"
+echo "   - Granite 3.1 8B (local via Ollama)"
 echo "   - Advanced code completion and analysis"
 echo "   - AI-powered debugging and generation"
 echo "   - Full project context awareness"
