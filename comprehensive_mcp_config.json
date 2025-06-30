@@ -4,8 +4,8 @@
       "command": "python",
       "args": ["comprehensive_mcp_server.py"],
       "env": {
-        "DEEPSEEK_API_BASE": "https://api.deepseek.com/v1",
-        "DEEPSEEK_API_KEY": "${DEEPSEEK_API_KEY}",
+        "DEEPSEEK_API_BASE": "http://localhost:8000/v1",
+        "DEEPSEEK_MODEL": "deepseek-coder",
         "GRANITE_API_BASE": "http://localhost:11434/v1",
         "PGHOST": "localhost",
         "PGPORT": "5432",
@@ -23,7 +23,7 @@
     "ai_models": {
       "deepseek": {
         "name": "DeepSeek-Coder-v2-lite-instruct",
-        "type": "remote",
+        "type": "local",
         "purpose": "Complex code analysis, debugging, and generation"
       },
       "granite": {
@@ -95,10 +95,14 @@
     "node_js": ">=18",
     "docker": "optional",
     "api_keys": [
-      "DEEPSEEK_API_KEY (for external AI processing)",
       "GITHUB_TOKEN (for GitHub integration)",
       "OPENAI_API_KEY (optional)",
       "HUGGINGFACE_TOKEN (optional)"
+    ],
+    "local_services": [
+      "DeepSeek server running on localhost:8000",
+      "Granite via Ollama on localhost:11434",
+      "PostgreSQL on localhost:5432"
     ]
   }
 }

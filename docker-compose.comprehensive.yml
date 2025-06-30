@@ -61,9 +61,9 @@ services:
       PGUSER: postgres
       PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
       
-      # LLM Configuration
-      DEEPSEEK_API_BASE: https://api.deepseek.com/v1
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      # LLM Configuration (Local)
+      DEEPSEEK_API_BASE: http://host.docker.internal:8000/v1
+      DEEPSEEK_MODEL: deepseek-coder
       GRANITE_API_BASE: http://ollama:11434/v1
       
       # Server Configuration

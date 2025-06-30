@@ -93,10 +93,10 @@ class ComprehensiveMCPServer:
         self.llm_configs = {
             "deepseek": LLMConfig(
                 name="DeepSeek-Coder-v2-lite-instruct",
-                endpoint=os.getenv("DEEPSEEK_API_BASE", "https://api.deepseek.com/v1"),
-                api_key=os.getenv("DEEPSEEK_API_KEY"),
-                model="deepseek-coder",
-                type="remote",
+                endpoint=os.getenv("DEEPSEEK_API_BASE", "http://localhost:8000/v1"),
+                api_key=None,  # No API key needed for local/direct connection
+                model=os.getenv("DEEPSEEK_MODEL", "deepseek-coder"),
+                type="local",  # Changed from remote to local
                 max_tokens=8192,
                 temperature=0.1
             ),
@@ -303,15 +303,11 @@ class ComprehensiveMCPServer:
         """Initialize LLM clients for DeepSeek and Granite"""
         logger.info("Initializing LLM clients...")
         
-        # DeepSeek client (remote)
-        api_key = self.llm_configs['deepseek'].api_key
-        if api_key:
-            self.deepseek_client = aiohttp.ClientSession(
-                headers={"Authorization": f"Bearer {api_key}"},
-                timeout=aiohttp.ClientTimeout(total=60)
-            )
-        else:
-            logger.warning("DeepSeek API key not provided, client not initialized")
+        # DeepSeek client (now local/direct connection)
+        self.deepseek_client = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=60)
+        )
+        logger.info("✅ DeepSeek client initialized (direct connection)")
         
         # Granite client (local)
         self.granite_client = aiohttp.ClientSession(
@@ -736,8 +732,8 @@ class ComprehensiveMCPServer:
                 "timestamp": time.time(),
                 "components": {
                     "database": "connected" if self.db_pool else "disconnected",
-                    "deepseek_llm": "connected" if self.deepseek_client else "disconnected",
-                    "granite_llm": "connected" if self.granite_client else "disconnected",
+                    "deepseek_llm": "connected (local)" if self.deepseek_client else "disconnected",
+                    "granite_llm": "connected (local)" if self.granite_client else "disconnected",
                     "project_manager": "active" if self.project_manager else "inactive",
                     "code_intelligence": "loaded"
                 },
