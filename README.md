@@ -1,165 +1,279 @@
 # LocalContextMCP
 
-A smart Model Context Protocol server that gives your language models a memory. Built with PostgreSQL for persistence and LM Studio for embeddings, because context matters.
+A powerful Model Context Protocol (MCP) server that provides intelligent code assistance, project analysis, and persistent memory for language models. Built with modern Python, PostgreSQL, and LM Studio integration.
 
-## What This Does
+## 🚀 Features
 
-Ever wished your LLM could remember things from earlier in long conversations? This server solves that by storing conversation chunks with semantic embeddings, letting you retrieve relevant context when you need it.
+- **Smart Code Intelligence**: Context-aware completions, refactoring, and debugging assistance
+- **Persistent Memory**: Store and retrieve conversation context with semantic search
+- **Multi-LLM Support**: Integration with LM Studio, DeepSeek, and other local models
+- **Project Analysis**: Deep understanding of codebases with symbol extraction and dependency mapping
+- **Real-time File Watching**: Automatic updates when files change
+- **Extensible Architecture**: Easy to add new tools and capabilities
+- **Production Ready**: Docker deployment, health monitoring, and comprehensive logging
 
-The magic happens through:
-- **PostgreSQL storage** - Your conversations persist between sessions
-- **LM Studio embeddings** - Using Qwen2.5 models to understand meaning
-- **Smart chunking** - Breaks text into meaningful pieces with metadata
-- **Semantic search** - Finds relevant context based on meaning, not just keywords
-- **Clean REST API** - Easy to integrate with any application
+## 🏗️ Architecture
 
-## Getting Started
-
-### The Easy Way (Docker)
-
-If you have Docker installed, you're 30 seconds away from running this:
-
-```bash
-git clone <your-repo-url>
-cd LocalContextMCP
-docker-compose up -d
-```
-
-That's it! The API will be running at http://localhost:5000 and you can check out the interactive docs at http://localhost:5000/apidocs.
-
-### The Manual Way
-
-Rather build things yourself? Cool, here's how:
-
-1. **Get your environment ready:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Set up PostgreSQL:**
-   You'll need a PostgreSQL database called `mcp_memory`. Create it however you normally do, then run:
-   ```bash
-   python db.py
-   ```
-
-3. **Fire it up:**
-   ```bash
-   python api_server.py
-   ```
-
-## Configuration
-
-You'll need these environment variables set up:
-
-```bash
-# PostgreSQL - adjust these for your setup
-PGHOST=localhost
-PGPORT=5432
-PGDATABASE=mcp_memory
-PGUSER=postgres
-PGPASSWORD=your_password
-
-# LM Studio - assuming you're running locally
-LMSTUDIO_API_BASE=http://localhost:1234/v1
-LMSTUDIO_EMBEDDING_MODEL=qwen2.5-coder-0.5B-instruct
-```
-
-## How to Use It
-
-### Check if everything's working
-```bash
-curl http://localhost:5000/health
-```
-
-### Store a message
-```bash
-curl -X POST http://localhost:5000/message \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "alice",
-    "session_id": "chat_001", 
-    "role": "user",
-    "content": "I love building with Python and PostgreSQL"
-  }'
-```
-
-### Search for relevant context
-```bash
-curl -X POST http://localhost:5000/semantic_search \
-  -H "Content-Type: application/json" \
-  -d '{
-    "session_id": "chat_001",
-    "query": "python development",
-    "top_k": 3
-  }'
-```
-
-There are more endpoints - check the Swagger docs at `/apidocs` for the full list.
-
-## Setting Up LM Studio
-
-You'll need LM Studio running to generate embeddings:
-
-1. Download and install [LM Studio](https://lmstudio.ai/)
-2. Load these models:
-   - `qwen2.5-coder-0.5B-instruct` for embeddings
-   - `qwen2.5-coder-14B-instruct` for your main LLM (optional)
-3. Start the local server (usually runs on port 1234)
-
-## Development
-
-### Project Layout
 ```
 LocalContextMCP/
-├── api_server.py          # Main Flask API
-├── db.py                  # Database setup and connections
-├── embedding.py           # LM Studio integration
-├── chunking.py            # Text processing
-├── store_and_retrieve.py  # Database operations
-├── semantic_search.py     # Vector search
-├── schema.sql            # Database schema
-├── tests/                # Test suite
-└── docker-compose.yml    # Easy deployment
+├── src/
+│   ├── mcp/
+│   │   ├── server.py          # Main MCP server
+│   │   ├── tools/             # MCP tool implementations
+│   │   └── handlers/          # Request handlers
+│   ├── core/
+│   │   ├── database.py        # Database operations
+│   │   ├── llm_client.py      # LLM integrations
+│   │   └── config.py          # Configuration management
+│   ├── intelligence/
+│   │   ├── code_analyzer.py   # Code analysis engine
+│   │   ├── project_manager.py # Project-level operations
+│   │   └── semantic_search.py # Vector search capabilities
+│   └── api/
+│       ├── rest_server.py     # REST API endpoints
+│       └── middleware/        # Authentication, logging, etc.
+├── tests/                     # Comprehensive test suite
+├── docker/                    # Docker configuration
+├── scripts/                   # Utility scripts
+└── docs/                      # Documentation
 ```
 
-### Running Tests
+## 🛠️ Quick Start
+
+### Option 1: Docker (Recommended)
+
 ```bash
-pytest tests/ -v
+# Clone and start
+git clone <repository-url>
+cd LocalContextMCP
+docker-compose up -d
+
+# Verify installation
+curl http://localhost:8080/health
 ```
 
-### Code Formatting
+### Option 2: Manual Installation
+
 ```bash
-black . && flake8 .
+# 1. Install dependencies
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 2. Setup PostgreSQL database
+createdb localcontextmcp
+psql localcontextmcp < database/schema.sql
+
+# 3. Configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# 4. Start the server
+python -m src.mcp.server
 ```
 
-## When Things Go Wrong
+## ⚙️ Configuration
 
-**Can't connect to PostgreSQL?**
-- Make sure it's running (`sudo systemctl status postgresql`)
-- Check your environment variables
-- Verify the database exists
+Create a `.env` file with your settings:
 
-**LM Studio not responding?**
-- Check if it's running on port 1234
-- Make sure you have a model loaded
-- Try hitting the API directly: `curl http://localhost:1234/v1/models`
+```bash
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/localcontextmcp
 
-**Docker acting up?**
-- Make sure ports 5000 and 5432 aren't already in use
-- Check the logs: `docker-compose logs`
-- Try rebuilding: `docker-compose up -d --build`
+# LM Studio
+LMSTUDIO_BASE_URL=http://localhost:1234/v1
+LMSTUDIO_MODEL=qwen2.5-coder-0.5B-instruct
 
-## Contributing
+# DeepSeek (optional)
+DEEPSEEK_BASE_URL=http://localhost:8000/v1
+DEEPSEEK_MODEL=deepseek-coder
 
-Found a bug or want to add a feature? Great! Just:
-1. Follow the coding standards in `.cursorrules`
-2. Add tests for your changes
-3. Update the docs if needed
+# Server
+HOST=0.0.0.0
+PORT=8080
+LOG_LEVEL=INFO
+```
 
-## Why This Exists
+## 🔧 Usage Examples
 
-Large language models are amazing but they forget everything between conversations. This project gives them a memory by storing conversation context with semantic embeddings, making it easy to retrieve relevant information when needed. It's like giving your AI a notebook it can search through.
+### MCP JSON-RPC Interface
 
-## License
+```bash
+# List available tools
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "method": "tools/list", "id": 1}'
 
-MIT License - use it however you want! 
+# Get code completions
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "code_completion",
+      "arguments": {
+        "file_path": "src/main.py",
+        "line": 10,
+        "column": 5,
+        "context": "def hello_world():\n    print("
+      }
+    },
+    "id": 2
+  }'
+```
+
+### REST API
+
+```bash
+# Store a memory
+curl -X POST http://localhost:8080/api/memory \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "dev_session_1",
+    "content": "Working on authentication system using JWT tokens",
+    "metadata": {
+      "project": "web_app",
+      "topic": "authentication"
+    }
+  }'
+
+# Search memories
+curl -X GET "http://localhost:8080/api/memory/search?query=authentication&limit=5"
+
+# Analyze project
+curl -X POST http://localhost:8080/api/project/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"path": "/path/to/project"}'
+```
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=src --cov-report=html
+
+# Run specific test categories
+pytest tests/test_mcp/ -v
+pytest tests/test_intelligence/ -v
+```
+
+## 📚 Available Tools
+
+### Code Intelligence
+- `code_completion`: Context-aware code completions
+- `project_analysis`: Deep project structure analysis
+- `symbol_search`: Find functions, classes, and variables
+- `refactor_suggestions`: AI-powered refactoring recommendations
+
+### Memory & Context
+- `store_memory`: Save conversation context
+- `search_memory`: Semantic search through stored memories
+- `get_context`: Retrieve relevant context for queries
+
+### File Operations
+- `read_file`: Secure file reading with access controls
+- `write_file`: File writing with backup and validation
+- `watch_files`: Real-time file change monitoring
+
+### Development Tools
+- `run_tests`: Execute project tests
+- `lint_code`: Code quality analysis
+- `format_code`: Automatic code formatting
+- `git_operations`: Git repository management
+
+## 🔌 LM Studio Setup
+
+1. **Install LM Studio**: Download from [lmstudio.ai](https://lmstudio.ai/)
+
+2. **Download Models**:
+   - For embeddings: `qwen2.5-coder-0.5B-instruct`
+   - For completions: `qwen2.5-coder-14B-instruct`
+
+3. **Start Server**: Load a model and start the local server (port 1234)
+
+4. **Verify Connection**:
+   ```bash
+   curl http://localhost:1234/v1/models
+   ```
+
+## 🐳 Docker Deployment
+
+The project includes production-ready Docker configuration:
+
+```bash
+# Development
+docker-compose -f docker/docker-compose.dev.yml up
+
+# Production
+docker-compose -f docker/docker-compose.prod.yml up -d
+
+# With monitoring
+docker-compose -f docker/docker-compose.monitoring.yml up -d
+```
+
+## 🔍 Monitoring & Health
+
+- **Health Check**: `GET /health`
+- **Metrics**: `GET /metrics` (Prometheus format)
+- **Logs**: Structured JSON logging with configurable levels
+- **Database Monitoring**: Connection pool metrics and query performance
+
+## 🤝 Contributing
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature-name`
+3. **Follow code standards**: Run `black src tests` and `flake8`
+4. **Add tests**: Ensure good test coverage
+5. **Submit a PR**: Include description and testing notes
+
+## 📋 Development Guidelines
+
+- **Code Style**: Follow PEP 8, use type hints
+- **Testing**: Write tests for all new features
+- **Documentation**: Update docs for user-facing changes
+- **Security**: Validate inputs, use parameterized queries
+- **Performance**: Profile database queries, use async where beneficial
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Database Connection Failed**
+```bash
+# Check PostgreSQL is running
+systemctl status postgresql
+
+# Verify connection
+psql -h localhost -U postgres -d localcontextmcp
+```
+
+**LM Studio Not Responding**
+```bash
+# Check if server is running
+curl http://localhost:1234/v1/models
+
+# Verify model is loaded in LM Studio interface
+```
+
+**Port Already in Use**
+```bash
+# Find process using port
+lsof -i :8080
+
+# Kill process if needed
+kill -9 <PID>
+```
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+- Built on the [Model Context Protocol](https://modelcontextprotocol.io/) specification
+- Inspired by the Claude Desktop MCP ecosystem
+- Uses [LM Studio](https://lmstudio.ai/) for local LLM inference

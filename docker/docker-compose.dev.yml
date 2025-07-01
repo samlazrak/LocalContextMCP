@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database for development
+  postgres-dev:
+    image: postgres:15-alpine
+    container_name: localcontextmcp-db-dev
+    environment:
+      POSTGRES_DB: localcontextmcp_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - mcp-dev-network
+    restart: unless-stopped
+
+  # MCP Server for development with hot reloading
+  mcp-server-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: builder  # Use builder stage for development tools
+    container_name: localcontextmcp-server-dev
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres-dev:5432/localcontextmcp_dev
+      HOST: 0.0.0.0
+      PORT: 8080
+      LOG_LEVEL: DEBUG
+      ENVIRONMENT: development
+      LMSTUDIO_BASE_URL: http://host.docker.internal:1234/v1
+      LMSTUDIO_MODEL: qwen2.5-coder-0.5B-instruct
+      DEEPSEEK_BASE_URL: http://host.docker.internal:8000/v1
+      DEEPSEEK_MODEL: deepseek-coder
+    ports:
+      - "8081:8080"  # Different port for dev
+    volumes:
+      # Mount source code for hot reloading
+      - ../src:/app/src
+      - ../database:/app/database
+      - ../tests:/app/tests
+      - ../.env.example:/app/.env
+      - mcp_dev_logs:/app/logs
+      - mcp_dev_data:/app/data
+    networks:
+      - mcp-dev-network
+    depends_on:
+      - postgres-dev
+    restart: unless-stopped
+    # Override command for development mode
+    command: >
+      sh -c "
+        echo 'Starting development server...' &&
+        python -m uvicorn src.mcp.server:create_app --host 0.0.0.0 --port 8080 --reload
+      "
+    stdin_open: true
+    tty: true
+
+  # Development tools container
+  dev-tools:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: builder
+    container_name: localcontextmcp-dev-tools
+    volumes:
+      - ../src:/app/src
+      - ../tests:/app/tests
+      - ../database:/app/database
+      - ../.env.example:/app/.env
+    networks:
+      - mcp-dev-network
+    working_dir: /app
+    # This container is used for running tests, linting, etc.
+    command: tail -f /dev/null
+    profiles:
+      - tools
+
+  # Test database (separate from dev for isolation)
+  postgres-test:
+    image: postgres:15-alpine
+    container_name: localcontextmcp-db-test
+    environment:
+      POSTGRES_DB: localcontextmcp_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - mcp-dev-network
+    restart: unless-stopped
+    profiles:
+      - testing
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  mcp_dev_logs:
+    driver: local
+  mcp_dev_data:
+    driver: local
+
+networks:
+  mcp-dev-network:
+    driver: bridge

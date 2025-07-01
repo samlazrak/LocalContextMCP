@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: localcontextmcp-db
+    environment:
+      POSTGRES_DB: localcontextmcp
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d localcontextmcp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MCP Server
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: localcontextmcp-server
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/localcontextmcp
+      HOST: 0.0.0.0
+      PORT: 8080
+      LOG_LEVEL: INFO
+      LMSTUDIO_BASE_URL: http://host.docker.internal:1234/v1
+      LMSTUDIO_MODEL: qwen2.5-coder-0.5B-instruct
+      DEEPSEEK_BASE_URL: http://host.docker.internal:8000/v1
+      DEEPSEEK_MODEL: deepseek-coder
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../src:/app/src:ro
+      - mcp_logs:/app/logs
+      - mcp_data:/app/data
+    networks:
+      - mcp-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Redis for caching (can be enabled if needed)
+  redis:
+    image: redis:7-alpine
+    container_name: localcontextmcp-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    profiles:
+      - cache
+    command: redis-server --appendonly yes
+
+  # Optional: Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: localcontextmcp-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - mcp-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+
+volumes:
+  postgres_data:
+    driver: local
+  mcp_logs:
+    driver: local
+  mcp_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+
+networks:
+  mcp-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -61,12 +61,19 @@ Thumbs.db
 
 # Docker
 .dockerignore
+docker-compose.override.yml
 
 # Temporary files
 *.tmp
 *.temp
 temp/
 tmp/
+
+# Application data
+data/
+backups/
+*.backup
+*.bak
 
 # Memory files
 memory.txt
