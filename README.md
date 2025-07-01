@@ -1,232 +1,165 @@
-# MCP Server with PostgreSQL and LM Studio
+# LocalContextMCP
 
-A Model Context Protocol (MCP) server implementation that uses PostgreSQL for persistent storage and LM Studio for embeddings, designed to increase context for large language models.
+A smart Model Context Protocol server that gives your language models a memory. Built with PostgreSQL for persistence and LM Studio for embeddings, because context matters.
 
-## Features
+## What This Does
 
-- **PostgreSQL Backend**: Persistent storage with connection pooling
-- **LM Studio Integration**: Uses Qwen2.5 models for embeddings
-- **Context Chunking**: Intelligent text chunking with metadata
-- **Semantic Search**: Vector similarity search for context retrieval
-- **RESTful API**: OpenAPI/Swagger documented endpoints
-- **Docker Support**: Complete containerization with docker-compose
-- **Comprehensive Testing**: pytest-based test suite
+Ever wished your LLM could remember things from earlier in long conversations? This server solves that by storing conversation chunks with semantic embeddings, letting you retrieve relevant context when you need it.
 
-## Quick Start
+The magic happens through:
+- **PostgreSQL storage** - Your conversations persist between sessions
+- **LM Studio embeddings** - Using Qwen2.5 models to understand meaning
+- **Smart chunking** - Breaks text into meaningful pieces with metadata
+- **Semantic search** - Finds relevant context based on meaning, not just keywords
+- **Clean REST API** - Easy to integrate with any application
 
-### Using Docker Compose (Recommended)
+## Getting Started
 
-1. **Clone and navigate to the project:**
-   ```bash
-   cd LocalContextMCP
-   ```
+### The Easy Way (Docker)
 
-2. **Start the services:**
-   ```bash
-   docker-compose up -d
-   ```
+If you have Docker installed, you're 30 seconds away from running this:
 
-3. **Access the API:**
-   - API: http://localhost:5000
-   - Swagger Docs: http://localhost:5000/apidocs
-   - PostgreSQL: localhost:5432
+```bash
+git clone <your-repo-url>
+cd LocalContextMCP
+docker-compose up -d
+```
 
-### Manual Setup
+That's it! The API will be running at http://localhost:5000 and you can check out the interactive docs at http://localhost:5000/apidocs.
 
-1. **Install dependencies:**
+### The Manual Way
+
+Rather build things yourself? Cool, here's how:
+
+1. **Get your environment ready:**
    ```bash
    pip install -r requirements.txt
    ```
 
 2. **Set up PostgreSQL:**
-   - Create database: `mcp_memory`
-   - Set environment variables (see Configuration section)
-   - Run schema setup: `python db.py`
+   You'll need a PostgreSQL database called `mcp_memory`. Create it however you normally do, then run:
+   ```bash
+   python db.py
+   ```
 
-3. **Start the server:**
+3. **Fire it up:**
    ```bash
    python api_server.py
    ```
 
 ## Configuration
 
-### Environment Variables
+You'll need these environment variables set up:
 
 ```bash
-# PostgreSQL Configuration
+# PostgreSQL - adjust these for your setup
 PGHOST=localhost
 PGPORT=5432
 PGDATABASE=mcp_memory
 PGUSER=postgres
 PGPASSWORD=your_password
 
-# LM Studio Configuration
+# LM Studio - assuming you're running locally
 LMSTUDIO_API_BASE=http://localhost:1234/v1
 LMSTUDIO_EMBEDDING_MODEL=qwen2.5-coder-0.5B-instruct
 ```
 
-## API Endpoints
+## How to Use It
 
-### Health Check
-```http
-GET /health
+### Check if everything's working
+```bash
+curl http://localhost:5000/health
 ```
 
-### Store Message
-```http
-POST /message
-Content-Type: application/json
-
-{
-  "user_id": "user123",
-  "session_id": "session456",
-  "role": "user",
-  "content": "Hello, world!"
-}
+### Store a message
+```bash
+curl -X POST http://localhost:5000/message \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "alice",
+    "session_id": "chat_001", 
+    "role": "user",
+    "content": "I love building with Python and PostgreSQL"
+  }'
 ```
 
-### Store Context Chunk
-```http
-POST /context_chunk
-Content-Type: application/json
-
-{
-  "session_id": "session456",
-  "chunk_index": 0,
-  "content": "Chunk content",
-  "embedding": [0.1, 0.2, ...],
-  "message_id": 1,
-  "start_offset": 0,
-  "end_offset": 12
-}
+### Search for relevant context
+```bash
+curl -X POST http://localhost:5000/semantic_search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "chat_001",
+    "query": "python development",
+    "top_k": 3
+  }'
 ```
 
-### Retrieve Recent Chunks
-```http
-GET /recent_chunks?session_id=session456&limit=5
-```
+There are more endpoints - check the Swagger docs at `/apidocs` for the full list.
 
-### Semantic Search
-```http
-POST /semantic_search
-Content-Type: application/json
+## Setting Up LM Studio
 
-{
-  "session_id": "session456",
-  "query": "search query",
-  "top_k": 3
-}
-```
+You'll need LM Studio running to generate embeddings:
+
+1. Download and install [LM Studio](https://lmstudio.ai/)
+2. Load these models:
+   - `qwen2.5-coder-0.5B-instruct` for embeddings
+   - `qwen2.5-coder-14B-instruct` for your main LLM (optional)
+3. Start the local server (usually runs on port 1234)
 
 ## Development
 
-### Project Structure
+### Project Layout
 ```
 LocalContextMCP/
-├── api_server.py          # Flask API server
-├── db.py                  # Database connection and setup
-├── embedding.py           # LM Studio embedding generation
-├── chunking.py            # Text chunking logic
+├── api_server.py          # Main Flask API
+├── db.py                  # Database setup and connections
+├── embedding.py           # LM Studio integration
+├── chunking.py            # Text processing
 ├── store_and_retrieve.py  # Database operations
-├── semantic_search.py     # Vector similarity search
-├── schema.sql            # PostgreSQL schema
-├── requirements.txt      # Python dependencies
+├── semantic_search.py     # Vector search
+├── schema.sql            # Database schema
 ├── tests/                # Test suite
-├── Dockerfile           # Docker configuration
-├── docker-compose.yml   # Multi-service setup
-└── .cursor/             # Cursor IDE configuration
+└── docker-compose.yml    # Easy deployment
 ```
 
 ### Running Tests
 ```bash
-# Run all tests
 pytest tests/ -v
-
-# Run with coverage
-pytest tests/ --cov=. --cov-report=html -v
 ```
 
-### Code Quality
+### Code Formatting
 ```bash
-# Format code
-black .
-
-# Lint code
-flake8 .
+black . && flake8 .
 ```
 
-## Docker Commands
+## When Things Go Wrong
 
-```bash
-# Build image
-docker build -t mcp-server .
+**Can't connect to PostgreSQL?**
+- Make sure it's running (`sudo systemctl status postgresql`)
+- Check your environment variables
+- Verify the database exists
 
-# Run with docker-compose
-docker-compose up -d
+**LM Studio not responding?**
+- Check if it's running on port 1234
+- Make sure you have a model loaded
+- Try hitting the API directly: `curl http://localhost:1234/v1/models`
 
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-
-# Rebuild and restart
-docker-compose up -d --build
-```
-
-## Database Schema
-
-### Tables
-- **messages**: Chat messages with user and session info
-- **context_chunks**: Text chunks with embeddings and metadata
-- **users**: User information
-- **schema_version**: Database schema versioning
-
-### Indexes
-- `idx_context_chunks_session_chunk`: Fast chunk retrieval by session
-- `idx_context_chunks_message_id`: Link chunks to messages
-- `idx_messages_session_id`: Fast message retrieval by session
-
-## LM Studio Setup
-
-1. **Install LM Studio** on your machine
-2. **Load Qwen2.5 models**:
-   - `qwen2.5-coder-0.5B-instruct` (for embeddings)
-   - `qwen2.5-coder-14B-instruct` (for primary LLM)
-3. **Start the server** on port 1234
-4. **Configure the API base URL** in environment variables
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Failed**
-   - Check PostgreSQL is running
-   - Verify environment variables
-   - Ensure database exists
-
-2. **LM Studio Connection Failed**
-   - Verify LM Studio is running on port 1234
-   - Check model is loaded
-   - Test API endpoint manually
-
-3. **Docker Issues**
-   - Check Docker and docker-compose are installed
-   - Ensure ports 5000 and 5432 are available
-   - Check container logs: `docker-compose logs`
-
-### Logs
-- Application logs are available in the console
-- Docker logs: `docker-compose logs -f app`
-- Database logs: `docker-compose logs -f db`
+**Docker acting up?**
+- Make sure ports 5000 and 5432 aren't already in use
+- Check the logs: `docker-compose logs`
+- Try rebuilding: `docker-compose up -d --build`
 
 ## Contributing
 
+Found a bug or want to add a feature? Great! Just:
 1. Follow the coding standards in `.cursorrules`
-2. Write tests for new features
-3. Update documentation
-4. Use the provided development tools
+2. Add tests for your changes
+3. Update the docs if needed
+
+## Why This Exists
+
+Large language models are amazing but they forget everything between conversations. This project gives them a memory by storing conversation context with semantic embeddings, making it easy to retrieve relevant information when needed. It's like giving your AI a notebook it can search through.
 
 ## License
 
-This project is licensed under the MIT License. 
+MIT License - use it however you want! 
