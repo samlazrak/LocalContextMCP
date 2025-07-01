@@ -1,25 +1,36 @@
-psycopg2-binary
-flask
-jsonrpcserver
-requests
-pytest
-beautifulsoup4
-lxml
-pydantic
-tree-sitter
-tree-sitter-python
-tree-sitter-javascript
-tree-sitter-typescript
-watchdog
-pygments
-python-lsp-server
-asyncio-mqtt
-sentence-transformers
-aiohttp
-redis
-numpy
-scikit-learn
-prometheus-client
-asyncpg
-uvloop
-orjson
+# Core MCP Server Dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Database
+asyncpg==0.29.0
+psycopg2-binary==2.9.7
+
+# LLM Integration
+aiohttp==3.9.1
+httpx==0.25.2
+
+# Tools and Utilities
+aiofiles==23.2.1
+gitpython==3.1.40
+requests==2.31.0
+beautifulsoup4==4.12.2
+pygments==2.17.2
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Security
+python-jose==3.3.0
+passlib==1.7.4
+
+# Logging and Monitoring
+structlog==23.2.0
+prometheus-client==0.19.0
