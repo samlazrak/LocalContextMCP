@@ -1,165 +1,408 @@
-# LocalContextMCP
+# MCP Server
 
-A smart Model Context Protocol server that gives your language models a memory. Built with PostgreSQL for persistence and LM Studio for embeddings, because context matters.
+A comprehensive Model Context Protocol (MCP) server built with modern Python practices. This server provides LLM integration, tool execution, and persistent session management with a clean, modular architecture.
 
-## What This Does
+## Features
 
-Ever wished your LLM could remember things from earlier in long conversations? This server solves that by storing conversation chunks with semantic embeddings, letting you retrieve relevant context when you need it.
+- **🔌 Multi-LLM Support**: Compatible with LM Studio, Ollama, and OpenAI
+- **🛠️ Tool System**: Extensible tool architecture with built-in filesystem operations
+- **💾 Persistent Storage**: PostgreSQL-based session and execution history
+- **📊 Monitoring**: Health checks, logging, and performance metrics
+- **🔒 Security**: Path validation, input sanitization, and configurable access controls
+- **⚡ High Performance**: Async/await throughout, connection pooling, caching
+- **🐳 Docker Ready**: Complete containerization with Docker Compose
+- **📖 API Documentation**: Interactive OpenAPI docs with FastAPI
 
-The magic happens through:
-- **PostgreSQL storage** - Your conversations persist between sessions
-- **LM Studio embeddings** - Using Qwen2.5 models to understand meaning
-- **Smart chunking** - Breaks text into meaningful pieces with metadata
-- **Semantic search** - Finds relevant context based on meaning, not just keywords
-- **Clean REST API** - Easy to integrate with any application
+## Architecture
 
-## Getting Started
-
-### The Easy Way (Docker)
-
-If you have Docker installed, you're 30 seconds away from running this:
-
-```bash
-git clone <your-repo-url>
-cd LocalContextMCP
-docker-compose up -d
+```
+mcp_server/
+├── config.py           # Configuration management
+├── server.py            # FastAPI server with MCP endpoints
+├── database/            # Database models and connection management
+├── llm/                 # LLM client with multi-provider support
+├── tools/               # Tool system with extensible base classes
+└── utils/               # Logging and utility functions
 ```
 
-That's it! The API will be running at http://localhost:5000 and you can check out the interactive docs at http://localhost:5000/apidocs.
+## Quick Start
 
-### The Manual Way
+### Option 1: Docker (Recommended)
 
-Rather build things yourself? Cool, here's how:
+```bash
+# Clone and setup
+git clone <repository-url>
+cd mcp-server
 
-1. **Get your environment ready:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Start with Docker Compose
+docker-compose up -d
 
-2. **Set up PostgreSQL:**
-   You'll need a PostgreSQL database called `mcp_memory`. Create it however you normally do, then run:
-   ```bash
-   python db.py
-   ```
+# Check health
+curl http://localhost:8080/health
+```
 
-3. **Fire it up:**
-   ```bash
-   python api_server.py
-   ```
+### Option 2: Local Development
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Setup database (PostgreSQL required)
+createdb mcp_server
+
+# Run server
+python main.py
+```
 
 ## Configuration
 
-You'll need these environment variables set up:
+The server uses environment variables for configuration. See `.env.example` for all options:
+
+### Key Settings
 
 ```bash
-# PostgreSQL - adjust these for your setup
+# Server
+MCP_HOST=0.0.0.0
+MCP_PORT=8080
+
+# Database
 PGHOST=localhost
-PGPORT=5432
-PGDATABASE=mcp_memory
+PGDATABASE=mcp_server
 PGUSER=postgres
-PGPASSWORD=your_password
+PGPASSWORD=postgres
 
-# LM Studio - assuming you're running locally
-LMSTUDIO_API_BASE=http://localhost:1234/v1
-LMSTUDIO_EMBEDDING_MODEL=qwen2.5-coder-0.5B-instruct
+# LLM Provider
+LLM_DEFAULT_PROVIDER=lmstudio  # lmstudio, ollama, openai
+LMSTUDIO_BASE_URL=http://localhost:1234/v1
+
+# Security
+MCP_FS_ALLOWED_PATHS=["/workspace", "/tmp"]
 ```
 
-## How to Use It
+## API Usage
 
-### Check if everything's working
-```bash
-curl http://localhost:5000/health
-```
+### MCP Protocol (JSON-RPC)
 
-### Store a message
 ```bash
-curl -X POST http://localhost:5000/message \
+# List available tools
+curl -X POST http://localhost:8080/mcp \
   -H "Content-Type: application/json" \
   -d '{
-    "user_id": "alice",
-    "session_id": "chat_001", 
-    "role": "user",
-    "content": "I love building with Python and PostgreSQL"
+    "jsonrpc": "2.0",
+    "method": "tools/list",
+    "id": "1"
+  }'
+
+# Call a tool
+curl -X POST http://localhost:8080/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "readfile",
+      "arguments": {
+        "file_path": "/workspace/example.txt"
+      }
+    },
+    "id": "2"
   }'
 ```
 
-### Search for relevant context
+### REST API (Alternative)
+
 ```bash
-curl -X POST http://localhost:5000/semantic_search \
+# List tools
+curl http://localhost:8080/api/v1/tools
+
+# Call tool
+curl -X POST http://localhost:8080/api/v1/tools/call \
   -H "Content-Type: application/json" \
   -d '{
-    "session_id": "chat_001",
-    "query": "python development",
-    "top_k": 3
+    "tool_name": "readfile",
+    "parameters": {
+      "file_path": "/workspace/example.txt"
+    }
+  }'
+
+# LLM completion
+curl -X POST http://localhost:8080/api/v1/llm/complete \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "Hello, how are you?"}
+    ]
   }'
 ```
 
-There are more endpoints - check the Swagger docs at `/apidocs` for the full list.
+## Available Tools
 
-## Setting Up LM Studio
+### Filesystem Tools
 
-You'll need LM Studio running to generate embeddings:
+- **`readfile`**: Read file contents with encoding support
+- **`writefile`**: Write content to files with directory creation
+- **`listdirectory`**: List directory contents (with recursive option)
+- **`createdirectory`**: Create directories with parent support
+- **`deletefile`**: Delete files and directories safely
 
-1. Download and install [LM Studio](https://lmstudio.ai/)
-2. Load these models:
-   - `qwen2.5-coder-0.5B-instruct` for embeddings
-   - `qwen2.5-coder-14B-instruct` for your main LLM (optional)
-3. Start the local server (usually runs on port 1234)
+### Tool Parameters
+
+Each tool has detailed parameter schemas available via the API. Example:
+
+```json
+{
+  "name": "readfile",
+  "description": "Read the contents of a file",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "file_path": {
+        "type": "string",
+        "description": "Path to the file to read"
+      },
+      "encoding": {
+        "type": "string",
+        "description": "File encoding (default: utf-8)",
+        "default": "utf-8"
+      }
+    },
+    "required": ["file_path"]
+  }
+}
+```
+
+## LLM Integration
+
+### Supported Providers
+
+#### LM Studio
+```bash
+LMSTUDIO_BASE_URL=http://localhost:1234/v1
+LMSTUDIO_MODEL=your-model-name
+```
+
+#### Ollama
+```bash
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama2
+```
+
+#### OpenAI
+```bash
+OPENAI_API_KEY=your-api-key
+OPENAI_MODEL=gpt-4
+```
+
+### Usage Example
+
+```python
+# The server automatically routes to the configured provider
+response = await llm_client.complete([
+    {"role": "user", "content": "Explain async programming"}
+])
+```
+
+## Security Features
+
+- **Path Validation**: All file operations are restricted to allowed paths
+- **Input Sanitization**: Parameter validation and type checking
+- **Size Limits**: Configurable limits for file sizes and requests
+- **Error Handling**: Graceful error handling without exposing internals
+- **Non-root Execution**: Docker containers run as non-root user
+
+## Monitoring & Logging
+
+### Health Checks
+
+```bash
+curl http://localhost:8080/health
+```
+
+Returns comprehensive health status:
+```json
+{
+  "status": "healthy",
+  "components": {
+    "database": {"status": "healthy", "response_time_ms": 12},
+    "llm": {"status": "healthy", "providers": {...}},
+    "tools": {"status": "healthy", "available_tools": [...]}
+  }
+}
+```
+
+### Logging
+
+- **Structured JSON logging** in production
+- **Colored text logging** in development  
+- **Request/response logging** with timing
+- **Database query logging** for debugging
+- **Error tracking** with context
+
+### Metrics
+
+The server tracks:
+- Tool execution times and success rates
+- LLM response times and token usage  
+- Database query performance
+- Session activity and retention
 
 ## Development
 
-### Project Layout
-```
-LocalContextMCP/
-├── api_server.py          # Main Flask API
-├── db.py                  # Database setup and connections
-├── embedding.py           # LM Studio integration
-├── chunking.py            # Text processing
-├── store_and_retrieve.py  # Database operations
-├── semantic_search.py     # Vector search
-├── schema.sql            # Database schema
-├── tests/                # Test suite
-└── docker-compose.yml    # Easy deployment
+### Adding New Tools
+
+1. Create a new tool class inheriting from `MCPTool`:
+
+```python
+from mcp_server.tools.base import MCPTool, ToolParameter, ToolResult
+
+class MyTool(MCPTool):
+    @property
+    def description(self) -> str:
+        return "Description of what this tool does"
+    
+    @property  
+    def parameters(self) -> List[ToolParameter]:
+        return [
+            ToolParameter(
+                name="param1", 
+                type="string",
+                description="Parameter description",
+                required=True
+            )
+        ]
+    
+    async def execute(self, param1: str) -> ToolResult:
+        # Tool implementation
+        return ToolResult(
+            success=True,
+            data={"result": "success"}
+        )
 ```
 
-### Running Tests
+2. Register the tool:
+
+```python
+from mcp_server.tools.base import register_tool
+register_tool(MyTool())
+```
+
+### Testing
+
 ```bash
+# Run tests
 pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=mcp_server --cov-report=html
+
+# Test specific components
+pytest tests/test_tools.py -v
 ```
 
-### Code Formatting
+### Code Quality
+
 ```bash
-black . && flake8 .
+# Format code
+black mcp_server/ tests/
+
+# Lint code  
+flake8 mcp_server/ tests/
+
+# Type checking
+mypy mcp_server/
 ```
 
-## When Things Go Wrong
+## Production Deployment
 
-**Can't connect to PostgreSQL?**
-- Make sure it's running (`sudo systemctl status postgresql`)
-- Check your environment variables
-- Verify the database exists
+### Environment Setup
 
-**LM Studio not responding?**
-- Check if it's running on port 1234
-- Make sure you have a model loaded
-- Try hitting the API directly: `curl http://localhost:1234/v1/models`
+1. Use strong database credentials
+2. Configure allowed paths restrictively
+3. Enable authentication if needed
+4. Set up proper logging aggregation
+5. Configure rate limiting for public APIs
 
-**Docker acting up?**
-- Make sure ports 5000 and 5432 aren't already in use
-- Check the logs: `docker-compose logs`
-- Try rebuilding: `docker-compose up -d --build`
+### Docker Production
+
+```yaml
+# docker-compose.prod.yml
+version: '3.8'
+services:
+  mcp_server:
+    image: mcp-server:latest
+    environment:
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - MCP_ENABLE_AUTH=true
+      - MCP_JWT_SECRET_KEY=your-secret-key
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+```
+
+### Health Monitoring
+
+Set up monitoring for:
+- `/health` endpoint availability
+- Database connection health
+- LLM provider availability  
+- Tool execution success rates
+- Memory and CPU usage
+
+## Troubleshooting
+
+### Common Issues
+
+**Database Connection Errors**
+```bash
+# Check PostgreSQL is running
+pg_isready -h localhost -p 5432
+
+# Verify credentials
+psql -h localhost -U postgres -d mcp_server
+```
+
+**LLM Provider Issues**
+```bash
+# Test LM Studio
+curl http://localhost:1234/v1/models
+
+# Test Ollama
+curl http://localhost:11434/api/tags
+```
+
+**Permission Errors**
+- Verify allowed paths in configuration
+- Check file system permissions
+- Ensure Docker volume mounts are correct
+
+### Logs
+
+Check logs for detailed error information:
+```bash
+# Docker logs
+docker-compose logs mcp_server
+
+# Local logs
+tail -f logs/mcp_server.log
+```
 
 ## Contributing
 
-Found a bug or want to add a feature? Great! Just:
-1. Follow the coding standards in `.cursorrules`
-2. Add tests for your changes
-3. Update the docs if needed
-
-## Why This Exists
-
-Large language models are amazing but they forget everything between conversations. This project gives them a memory by storing conversation context with semantic embeddings, making it easy to retrieve relevant information when needed. It's like giving your AI a notebook it can search through.
+1. Fork the repository
+2. Create a feature branch
+3. Follow the coding standards (see `.cursorrules`)
+4. Add tests for new functionality
+5. Update documentation
+6. Submit a pull request
 
 ## License
 
-MIT License - use it however you want! 
+MIT License - see LICENSE file for details. 
